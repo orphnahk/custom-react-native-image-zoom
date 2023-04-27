@@ -87,6 +87,14 @@ export default function ImageZoom({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
+  const oldScale = useSharedValue(1);
+  const oldInitialFocalX = useSharedValue(0);
+  const oldInitialFocalY = useSharedValue(0);
+  const oldFocalX = useSharedValue(0);
+  const oldFocalY = useSharedValue(0);
+  const oldTranslateX = useSharedValue(0);
+  const oldTranslateY = useSharedValue(0);
+
   const onInteractionStarted = () => {
     if (!isInteracting.current) {
       isInteracting.current = true;
@@ -124,13 +132,16 @@ export default function ImageZoom({
     onPanEnd?.();
     onInteractionEnded();
   };
+  
 
   const panHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
     onActive: (event: PanGestureHandlerEventPayload) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
+      translateX.value = oldTranslateX.value + event.translationX;
+      translateY.value = oldTranslateY.value + event.translationY;
     },
     onFinish: () => {
+      oldTranslateX.value = translateX.value
+      oldTranslateY.value = translateY.value
       // translateX.value = withTiming(0);
       // translateY.value = withTiming(0);
     },
@@ -139,25 +150,23 @@ export default function ImageZoom({
   const pinchHandler =
     useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
       onStart: (event: PinchGestureHandlerEventPayload) => {
-        initialFocalX.value = event.focalX;
-        initialFocalY.value = event.focalY;
+        // initialFocalX.value = oldInitialFocalX.value + event.focalX;
+        // initialFocalY.value = oldInitialFocalY.value + event.focalY;
       },
       onActive: (event: PinchGestureHandlerEventPayload) => {
         // onStart: focalX & focalY result both to 0 on Android
-        if (initialFocalX.value === 0 && initialFocalY.value === 0) {
-          initialFocalX.value = event.focalX;
-          initialFocalY.value = event.focalY;
-        }
-        scale.value = clamp(event.scale, minScale, maxScale);
-        focalX.value = (centerX - initialFocalX.value) * (scale.value - 1);
-        focalY.value = (centerY - initialFocalY.value) * (scale.value - 1);
+        // if (initialFocalX.value === 0 && initialFocalY.value === 0) {
+        //   initialFocalX.value = oldInitialFocalX.value + event.focalX;
+        //   initialFocalY.value = oldInitialFocalY.value + event.focalY;
+        // }
+        scale.value = clamp(oldScale.value + (event.scale - 1), minScale, maxScale);
+        // focalX.value = (centerX - initialFocalX.value) * (scale.value - 1);
+        // focalY.value = (centerY - initialFocalY.value) * (scale.value - 1);
       },
       onFinish: () => {
-        // scale.value = withTiming(1);
-        // focalX.value = withTiming(0);
-        // focalY.value = withTiming(0);
-        // initialFocalX.value = 0;
-        // initialFocalY.value = 0;
+        oldScale.value = scale.value;
+        // oldInitialFocalX.value = initialFocalX.value;
+        // oldInitialFocalY.value = initialFocalY.value;
       },
     });
 
